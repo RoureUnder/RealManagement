@@ -69,8 +69,12 @@ public class UserHandler {
 
     @DeleteMapping("/deleteByStaffNo")
     public String delete(int StaffNo){
-        userRepository.deleteByStaffNo(StaffNo);
-        return "{\"Message\":\"success\"}";
+        int res = userRepository.deleteByStaffNo(StaffNo);
+        if(res==1)
+        {
+            return "{\"Message\":\"success\"}";
+        }
+        else return "{\"Message\":\"error\"}";
     }
 
 
