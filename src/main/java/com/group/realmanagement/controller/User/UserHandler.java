@@ -73,6 +73,11 @@ public class UserHandler {
         return "{\"Message\":\"success\"}";
     }
 
+    @PutMapping("/dasd")
+    public String push(int StaffNo){
+        userRepository.deleteByStaffNo(StaffNo);
+        return "{\"Message\":\"success\"}";
+    }
     // @PostMapping("/login")
     // public LoginInfo checkAccount(String username,String password) throws Exception {//加密后与数据库对比
     //     password = encryptBASE64(password.getBytes());//加密密码
