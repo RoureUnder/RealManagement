@@ -22,4 +22,9 @@ public class StaffRepositoryTest {
     void updateByStaffNo(){
         System.out.println(staffRepository.updateByStaffNo("name", "department", "post", "contact", 9999, 99999, 10003));
     }
+
+    @Test
+    void findByStaffName(){
+        System.out.println(staffRepository.findByStaffName("staff1"));
+    }
 }

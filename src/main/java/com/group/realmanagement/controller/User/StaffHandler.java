@@ -25,6 +25,11 @@ public class StaffHandler {
         return staffRepository.findAll();
     }
 
+    @GetMapping("/findByStaffName")
+    public List<Staff> findByStaffName(String name){
+        return staffRepository.findByStaffName(name);
+    }
+
     @PostMapping("/create")
     public String save(@RequestBody Staff staff){
         Staff staff2 = staffRepository.save(staff);
@@ -35,7 +40,7 @@ public class StaffHandler {
         else return "{\"Message\":\"error\"}";
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/deleteByStaffNo")
     public String delete(int StaffNo){
         int res = staffRepository.deleteByStaffNo(StaffNo);
         if(res==1)
@@ -45,7 +50,7 @@ public class StaffHandler {
         else return "{\"Message\":\"error\"}";
     }
 
-    @PutMapping("/update")
+    @PutMapping("/updateByStaffNo")
     public String update(@RequestBody Staff staff){
         // staff.setPassword();//加密后存入数据库
         int res = staffRepository.updateByStaffNo(staff.getName(),staff.getDepartment(),staff.getPost(),staff.getContact(),
