@@ -59,7 +59,10 @@ public class UserHandler {
     @PutMapping("/update")
     public String update(@RequestBody User user){
         // user.setPassword();//加密后存入数据库
+        // int res =1;
         int res = userRepository.updateByStaffNo(user.getUsername(), encryptBASE64(user.getPassword().getBytes()), user.getAccess(), user.getStaffNo());
+        
+        // System.out.println(user);
         if(res==1)
         {
             return "{\"Message\":\"success\"}";
@@ -76,6 +79,20 @@ public class UserHandler {
         }
         else return "{\"Message\":\"error\"}";
     }
+
+    @PostMapping("/login")
+    public String login(String username,String password){
+        password = encryptBASE64(password.getBytes());//加密密码
+        User user = userRepository.findByUsername(username);
+        if(user != null&&user.getPassword().equals(password))
+        {
+            return "success login";
+        }
+        else{
+            return "error";
+        }
+    }
+
 
 
     // @PostMapping("/login")
