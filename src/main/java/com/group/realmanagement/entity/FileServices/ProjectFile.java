@@ -7,15 +7,13 @@ import lombok.Data;
 
 @Entity
 @Data
-public class File {
+public class ProjectFile {
     @Id
     private int no;
+    private int projectNo;
+    private String projectName;
+    private String module;
+    private String detail;
     private String fileName;
-    private String fileUrl;
-
-    public File(int no,String name,String url){
-        this.no=no;
-        fileName=name;
-        fileUrl=url;
-    }
+    private String fullPath;
 }
