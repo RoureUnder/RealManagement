@@ -26,4 +26,6 @@ public interface StaffRepository extends JpaRepository<Staff,Integer>{
     @Modifying
     @Query(nativeQuery = true,value = "SELECT *FROM staff WHERE name like %?%")
     List<Staff> findByStaffName(String name);
+
+    Staff findByStaffNo(int staffNo);
 }

@@ -1,6 +1,6 @@
 package com.group.realmanagement.repository.FileServices;
 
-import com.group.realmanagement.entity.FileServices.ProjectFile;
+import com.group.realmanagement.entity.Projects.ProjectFile;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

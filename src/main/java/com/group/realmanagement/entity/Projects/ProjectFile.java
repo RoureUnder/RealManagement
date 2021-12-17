@@ -1,4 +1,4 @@
-package com.group.realmanagement.entity.FileServices;
+package com.group.realmanagement.entity.Projects;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

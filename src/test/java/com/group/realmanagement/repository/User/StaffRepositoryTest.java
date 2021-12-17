@@ -25,17 +25,11 @@ public class StaffRepositoryTest {
 
     @Test
     void findByStaffName(){
-        System.out.println(staffRepository.findByStaffName("staff1"));
+        System.out.println(staffRepository.findByStaffName("人员"));
     }
 
-
-
     @Test
-    void testFileTest(){
-        String path="D:/项目/项目名-客户名-客户单位-日期/资料/temp.jpg";
-        String path2="D:/项目/项目名-客户名-客户单位-日期/渲染文件/原始模型/temp.jpg";
-        String a="D:",b="项目",c="项目名-客户名-客户单位-日期";
-
-        System.out.println(a+"/"+b+"/"+c);
+    void findByStaffNo(){
+        System.out.println(staffRepository.findByStaffNo(10001));
     }
 }
