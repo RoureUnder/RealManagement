@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 
+import com.alibaba.fastjson.JSONObject;
 import com.group.realmanagement.entity.User.User;
 import com.group.realmanagement.repository.User.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.batch.BatchProperties.Job;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,39 +32,50 @@ public class UserHandler {
         return userRepository.findAll();
     }
 
-    @GetMapping("/findById")
-    public User findById(int id){
-        return userRepository.findById(id).get();
-    }
-
     @GetMapping("/findByUsername")
     public User findByUsername(String username){
         return userRepository.findByUsername(username);
     }
 
     @GetMapping("/findByStaffNo")
-    public User findByStaffNo(int staffNo){
-        return userRepository.findByStaffNo(staffNo);
+    public JSONObject findByStaffNo(int staffNo) throws Exception{
+        JSONObject jObject = new JSONObject();
+        User user = userRepository.findByStaffNo(staffNo);
+        if(user==null){
+            jObject.put("Result", "error");
+        }
+        else{
+            jObject.put("User", user);
+            jObject.put("Result", "success");
+        }
+        // user.setPassword(new String(decryptBASE64(user.getPassword())));
+        return jObject;
     }
 
     @PostMapping("/register")
-    public String save(@RequestBody User user){
-        user.setPassword(encryptBASE64(user.getPassword().getBytes()));//加密后存入数据库
-        User user2 = userRepository.save(user);
-        if(user2 != null)
-        {
-            return "{\"Message\":\"success\"}";
+    public JSONObject save(@RequestBody User user){
+        JSONObject jsonObject = new JSONObject();
+        if(userRepository.findByUsername(user.getUsername())!=null){
+            jsonObject.put("Result", "error");
+            jsonObject.put("Message", "该账户已被注册");
         }
-        else return "{\"Message\":\"error\"}";
+        else{
+            user.setPassword(encryptBASE64(user.getPassword().getBytes()));//加密后存入数据库
+            User user2 = userRepository.save(user);
+            if(user2 != null)
+            {
+                jsonObject.put("Result", "success");
+            }
+            else jsonObject.put("Result", "success");
+            }
+        return jsonObject;
     }
 
     @PutMapping("/update")
     public String update(@RequestBody User user){
-        // user.setPassword();//加密后存入数据库
-        // int res =1;
+
         int res = userRepository.updateByStaffNo(user.getUsername(), encryptBASE64(user.getPassword().getBytes()), user.getAccess(), user.getStaffNo());
-        
-        // System.out.println(user);
+
         if(res==1)
         {
             return "{\"Message\":\"success\"}";
@@ -70,9 +83,10 @@ public class UserHandler {
         else return "{\"Message\":\"error\"}";
     }
 
+
     @DeleteMapping("/deleteByStaffNo")
-    public String delete(int StaffNo){
-        int res = userRepository.deleteByStaffNo(StaffNo);
+    public String delete(int staffNo){
+        int res = userRepository.deleteByStaffNo(staffNo);
         if(res==1)
         {
             return "{\"Message\":\"success\"}";
@@ -81,48 +95,33 @@ public class UserHandler {
     }
 
     @PostMapping("/login")
-    public String login(String username,String password){
+    public JSONObject login(String userName,String password){
         password = encryptBASE64(password.getBytes());//加密密码
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(userName);
+
+        JSONObject jObject = new JSONObject();
         if(user != null&&user.getPassword().equals(password))
         {
-            return "success login";
+            jObject.put("Result", "success");
+            jObject.put("User", user);
         }
         else{
-            return "error";
+            jObject.put("Result", "error");
+            jObject.put("Message", "用户名或密码错误");
         }
+        return jObject;
     }
 
 
 
-    // @PostMapping("/login")
-    // public LoginInfo checkAccount(String username,String password) throws Exception {//加密后与数据库对比
-    //     password = encryptBASE64(password.getBytes());//加密密码
-    //     LoginInfo info = new LoginInfo();
-    //     User user = userRepository.findByUsername(username);
-    //     Staff staff = new Staff();
-    //     if(user != null&&user.getPassword().equals(password))
-    //     {
-    //         staff = staffRepository.findById(user.getStaff_no()).get();//获取对应员工信息
-    //         info.setMessage("success");
-    //         info.setUserName(username);
-    //         info.setStaff_no(staff.getStaff_no());
-    //         info.setStaffName(staff.getStaff_name());
-    //         info.setStaffPosition(staff.getStaff_position());
-    //         info.setAccess(staff.getStaff_access());
-    //     }
-    //     else{
-    //         info.setMessage("error");
-    //     }
-    //     return info;
-    // }
 
-            // user.setPassword(encryptBASE64(password.getBytes()));//加密返回
-            // user.setPassword(new String(decryptBASE64(user.getPassword())));//解密
-    
+
+    // user.setPassword(encryptBASE64(password.getBytes()));//加密返回
+     // user.setPassword(new String(decryptBASE64(user.getPassword())));//解密
+
     /**
      * BASE64Encoder 加密
-     * 
+     *
      * @param data
      *            要加密的数据
      * @return 加密后的字符串
@@ -137,7 +136,7 @@ public class UserHandler {
     }
     /**
      * BASE64Decoder 解密
-     * 
+     *
      * @param data
      *            要解密的字符串
      * @return 解密后的byte[]

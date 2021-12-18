@@ -17,13 +17,8 @@ public class UserRepositoryTest {
     }
 
     @Test
-    void findByUserName(){
-        User user=userRepository.findByUsername("admin");
-        System.out.println(user);
-    }
-    @Test
     void fintByStaffNo(){
-        System.out.println(userRepository.findByStaffNo(500238));
+        System.out.println(userRepository.findByStaffNo(568));
     }
 
 

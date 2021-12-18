@@ -1,7 +1,9 @@
 package com.group.realmanagement.controller.User;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.alibaba.fastjson.JSONObject;
 import com.group.realmanagement.entity.User.Staff;
 import com.group.realmanagement.repository.User.StaffRepository;
 
@@ -26,8 +28,17 @@ public class StaffHandler {
     }
 
     @GetMapping("/findByStaffName")
-    public List<Staff> findByStaffName(String name){
-        return staffRepository.findByStaffName(name);
+    public JSONObject findByStaffName(String staffName){
+        JSONObject jObject = new JSONObject();
+        List<Staff> staff = staffRepository.findByStaffName(staffName);
+        if(staff.size()!=0){
+            jObject.put("Staffs", staff);
+            jObject.put("Result", "success");
+        }
+        else{
+            jObject.put("Result", "error");
+        }
+        return jObject;
     }
 
     @PostMapping("/create")
@@ -41,8 +52,8 @@ public class StaffHandler {
     }
 
     @DeleteMapping("/deleteByStaffNo")
-    public String delete(int StaffNo){
-        int res = staffRepository.deleteByStaffNo(StaffNo);
+    public String delete(int staffNo){
+        int res = staffRepository.deleteByStaffNo(staffNo);
         if(res==1)
         {
             return "{\"Message\":\"success\"}";
