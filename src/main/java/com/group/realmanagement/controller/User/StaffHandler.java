@@ -1,6 +1,5 @@
 package com.group.realmanagement.controller.User;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.alibaba.fastjson.JSONObject;

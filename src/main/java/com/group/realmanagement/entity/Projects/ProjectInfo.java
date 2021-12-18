@@ -1,8 +1,6 @@
 package com.group.realmanagement.entity.Projects;
 
 import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

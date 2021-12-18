@@ -12,8 +12,7 @@ import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -70,7 +69,7 @@ public class FileHandler {
         // 获取文件名
         String filename = file.getName();
         // 获取文件后缀名
-        String ext = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+        // String ext = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
         // log.info("文件后缀名：" + ext);
         
         // 将文件写入输入流

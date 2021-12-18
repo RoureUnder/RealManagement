@@ -10,7 +10,6 @@ import com.group.realmanagement.entity.User.User;
 import com.group.realmanagement.repository.User.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.batch.BatchProperties.Job;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
