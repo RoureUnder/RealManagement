@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+
 public interface GuestRepository extends JpaRepository<Guest,Integer>{
     @Transactional
     @Modifying
@@ -27,7 +28,4 @@ public interface GuestRepository extends JpaRepository<Guest,Integer>{
     List<Guest> findByGuestName(String guestName);
 
     Guest findByGuestNo(int guestNo);
-
-
-    
 }

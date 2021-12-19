@@ -27,11 +27,10 @@ public class FileHandler {
 
     @RequestMapping("/upload")
     @ResponseBody
-    public String fileUpload(@RequestParam("file") MultipartFile file,@RequestParam("fileUrl") String path){
+    public String fileUpload(@RequestParam("file") MultipartFile file,@RequestParam("fileUrl") String path){//上传单个文件
         if(file.isEmpty()){
             return null;
         }
-
         String fileName = file.getOriginalFilename();
         int size = (int) file.getSize();
         System.out.println(fileName + "-->" +size);
