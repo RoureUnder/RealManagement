@@ -1,5 +1,6 @@
 package com.group.realmanagement.controller.Projects;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,9 +70,9 @@ public class ProjectHandler {
         /*
         * func:初始化项目结构
         * 步骤：
-        * 1.从project_info表中查询对应的项目信息
-        * 2.本地建立目录结构
-        * 3.数据库project_file建立映射
+        * 1.从project_info表中查询对应的项目信息    实现
+        * 2.本地建立目录结构                        实现
+        * 3.数据库project_file建立映射              上传文件接口
         */
         JSONObject rObject = new JSONObject();
 
@@ -89,7 +90,7 @@ public class ProjectHandler {
                 +projectInfoReturn.getGuestName()+"-"
                 +guestRepository.findByGuestNo(projectInfo.getGuestNo()).getPrimaryUnit()+"-"
                 +projectInfoReturn.getStartTime()+"/";
-        System.out.println(fixedPath);
+        // System.out.println(fixedPath);
 
         JSONObject jObject = new JSONObject();
         String path = "D:/VsCodeProjects/VS-Code-Springboot/RealManagement/realmanagement/src/main/resources/depends/Directory.json";
@@ -101,17 +102,20 @@ public class ProjectHandler {
             {
                 for(int j=0;j<2;j++){
                     tempPath+="/"+jObject.getJSONArray("dirs").getJSONObject(i).getJSONArray("dirs").getJSONObject(j).getString("name");
-                    System.out.println(fixedPath+ tempPath);
+                    File dest = new File(fixedPath+ tempPath);
+                    dest.mkdirs();
+                    // System.out.println(fixedPath+ tempPath);
                     tempPath=jObject.getJSONArray("dirs").getJSONObject(i).getString("name");
                 }
             }
             else{
-                System.out.println(fixedPath+tempPath);
+                File dest = new File(fixedPath+ tempPath);
+                dest.mkdirs();
+                // System.out.println(fixedPath+tempPath);
             }
         }
 
-        rObject.put("result", "success");
+        rObject.put("Result", "success");
         return rObject;
-
     }
 }

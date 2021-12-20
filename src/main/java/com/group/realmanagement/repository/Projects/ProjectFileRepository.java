@@ -1,4 +1,4 @@
-package com.group.realmanagement.repository.FileServices;
+package com.group.realmanagement.repository.Projects;
 
 import com.group.realmanagement.entity.Projects.ProjectFile;
 

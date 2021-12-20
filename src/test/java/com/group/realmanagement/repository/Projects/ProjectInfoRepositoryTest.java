@@ -68,7 +68,6 @@ public class ProjectInfoRepositoryTest {
         ProjectInfoReturn projectInfoReturn = new ProjectInfoReturn();
         projectInfoReturn.setProjectDetail(projectInfo,staffRepository,guestRepository);
         String fixedPath="E:/房地产项目/";
-        
         fixedPath+=projectInfoReturn.getProjectName()+"-"
                 +projectInfoReturn.getGuestName()+"-"
                 +guestRepository.findByGuestNo(projectInfo.getGuestNo()).getPrimaryUnit()+"-"

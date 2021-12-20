@@ -12,7 +12,14 @@ import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.alibaba.fastjson.JSONObject;
+import com.group.realmanagement.entity.Projects.ProjectInfo;
+import com.group.realmanagement.entity.Projects.ProjectInfoReturn;
+import com.group.realmanagement.repository.Projects.ProjectInfoRepository;
+import com.group.realmanagement.repository.User.GuestRepository;
+import com.group.realmanagement.repository.User.StaffRepository;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -22,40 +29,75 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/file")
 public class FileHandler {
-    // @Autowired
-    // private FileRepository fileRepository;
+    @Autowired
+    private ProjectInfoRepository projectInfoRepository;
+    @Autowired
+    private StaffRepository staffRepository;
+    @Autowired
+    private GuestRepository guestRepository;
+
+
+    /*
+    * 接收项目文件并在数据库建立映射
+    * 参数说明：
+    * projectNo:项目编号
+    * file:上传的文件
+    * path:项目相对路径
+            建模/原始建模
+            资料
+    */
 
     @RequestMapping("/upload")
     @ResponseBody
-    public String fileUpload(@RequestParam("file") MultipartFile file,@RequestParam("fileUrl") String path){//上传单个文件
-        if(file.isEmpty()){
-            return null;
+    public JSONObject fileUpload(@RequestParam("projectNo") int projectNo,@RequestParam("file") MultipartFile file,@RequestParam("path") String path){//上传单个文件
+        JSONObject jObject = new JSONObject();
+        ProjectInfo projectInfo = projectInfoRepository.findByProjectNo(projectNo);
+        //检测参数是否正确
+        if(projectInfo==null){
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到对应项目信息");
+            return jObject;
         }
+        else if(file.isEmpty()){
+            jObject.put("Result", "error");
+            jObject.put("Message", "文件为空");
+            return jObject;
+        }
+        //初始化项目信息
+        ProjectInfoReturn projectInfoReturn = new ProjectInfoReturn();
+        projectInfoReturn.setProjectDetail(projectInfo, staffRepository, guestRepository);
+
+        String fullPath = "E:/房地产项目"+path;
+
+        //E:/房地产项目/项目名/模块/三级目录/文件名
         String fileName = file.getOriginalFilename();
         int size = (int) file.getSize();
-        System.out.println(fileName + "-->" +size);
-        // String path = "E:/test/test222";
-        // File dest = new File(10,fileName,path);
-        // fileRepository.save(dest);
-        File dest = new File(path + "/" + fileName);
-        // return dest.getParentFile().getAbsolutePath();
-        // if(!dest.getParentFile().exists()){ //判断文件父目录是否存在()
-            // System.out.println(!dest.getParentFile().exists());
-            dest.mkdirs();
-        // }
+        JSONObject fileInfo = new JSONObject();
+        File dest = new File(fullPath + "/" + fileName);
+        fileInfo.put("Path", dest.getAbsolutePath());
+        fileInfo.put("Size", file.getSize());
+        dest.mkdirs();
+
         try {
             file.transferTo(dest); //保存文件
-            return dest.getAbsolutePath();
+
+            //上传成功 建立数据库映射
+
+            jObject.put("Result", "success");
+            jObject.put("FileInfo", fileInfo);
         } catch (IllegalStateException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-            return "false";
+            jObject.put("Result", "error");
+            jObject.put("Message", "if the file has already been moved in the filesystem and is not available anymore for another transfer");
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
             System.out.println(!dest.getParentFile().exists()+dest.getParentFile().getAbsolutePath());
-            return "false";
+            jObject.put("Result", "error");
+            jObject.put("Message", "in case of reading or writing errors");
         }
+        return jObject;
     }
 
     @RequestMapping("/download")
