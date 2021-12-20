@@ -1,1 +1,13 @@
-1.上传文件接口(创建目录，剩余数据库映射未建立)
+项目-->文件
+    上传：单文件上传已实现
+        通过project/file/upload接口
+    下载：已实现
+        localhost:8080/project/file/download?path=
+    查找所有项目文件映射：已实现
+    查找指定项目文件映射(projectNo)：已实现
+    初始化项目(建立初始目录)：已实现
+
+    查找指定项目文件映射(projectNo+staffNo):未实现
+项目-->资料
+    查找所有项目信息：已实现
+    查找指定项目信息(projectNo)：已实现

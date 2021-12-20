@@ -3,6 +3,7 @@ package com.group.realmanagement.entity.Projects;
 import java.io.*;
 import java.util.Map;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
@@ -28,23 +29,34 @@ public class JsonTest {
         }
     }
 
-    public static void jsonLoop(Object object) {
-        if (object instanceof JSONObject) {
-            JSONObject jsonObject = (JSONObject) object;
-            for (Map.Entry entry : jsonObject.entrySet()) {
-                Object o = entry.getValue();
-                if (o instanceof String) {
-                    System.out.println("key:" + entry.getKey() + "，value:" + entry.getValue());
-                } else {
-                    jsonLoop(o);
+    public static int getIndexOfPath(String str) {
+        JSONObject jObject = new JSONObject();
+        String path = "D:/VsCodeProjects/VS-Code-Springboot/RealManagement/realmanagement/src/main/resources/depends/Directory.json";
+        String tempStr = JsonTest.readJsonFile(path);
+        jObject = JSON.parseObject(tempStr);
+        for(int i=0;i<5;i++){
+            String tempPath=jObject.getJSONArray("dirs").getJSONObject(i).getString("name");
+            if(tempPath.equals(str)){
+                return 1;
+            }
+            if(jObject.getJSONArray("dirs").getJSONObject(i).size()!=1)
+            {
+                for(int j=0;j<2;j++){
+                    tempPath= jObject.getJSONArray("dirs").getJSONObject(i).getJSONArray("dirs").getJSONObject(j).getString("name");
+                    // System.out.println(tempPath+"-->"+2);
+                    if(tempPath.equals(str)){
+                        return 2;
+                    }
+                    tempPath=jObject.getJSONArray("dirs").getJSONObject(i).getString("name");
+                }
+            }
+            else{
+                // System.out.println(tempPath+"-->"+1);
+                if(tempPath.equals(str)){
+                    return 1;
                 }
             }
         }
-        if (object instanceof JSONArray) {
-            JSONArray jsonArray = (JSONArray) object;
-            for (int i = 0; i < jsonArray.size(); i++) {
-                jsonLoop(jsonArray.get(i));
-            }
-        }
+        return 0;
     }
 }
