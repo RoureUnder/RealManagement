@@ -1,5 +1,7 @@
 package com.group.realmanagement.repository.Projects;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.List;
 
 import com.alibaba.fastjson.JSON;
@@ -9,6 +11,7 @@ import com.group.realmanagement.entity.Projects.JsonTest;
 import com.group.realmanagement.entity.Projects.ProjectInfo;
 import com.group.realmanagement.repository.Projects.ProjectFileRepository;
 
+import org.apache.tomcat.jni.File;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,4 +54,28 @@ public class ProjectFileRepositoryTest {
         }
         System.out.println(jObject);
     }
+
+
+    @Test
+    void findProjectFileByProjectNoAndStaffNo(){
+        System.out.println(projectFileRepository.findByProjectNoAndStaffNo(10001, 10001));
+    }
+
+    @Test
+    void getFileSize(){
+        long fileS = 158360031;
+        String size = ""; 
+        // long fileS = file.length();
+            DecimalFormat df = new DecimalFormat("#.00"); 
+                if (fileS < 1024) {
+                    size = df.format((double) fileS) + "BT";
+                } else if (fileS < 1048576) {
+                    size = df.format((double) fileS / 1024) + "KB";
+                } else if (fileS < 1073741824) {
+                    size = df.format((double) fileS / 1048576) + "MB";
+                } else {
+                    size = df.format((double) fileS / 1073741824) +"GB";
+                }
+        System.out.println(size);
+  }
 }

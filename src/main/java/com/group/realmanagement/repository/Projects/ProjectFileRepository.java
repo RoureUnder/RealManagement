@@ -16,4 +16,9 @@ public interface ProjectFileRepository extends JpaRepository<ProjectFile,Integer
     // @Query(nativeQuery = true,value="insert into staff SET name = ? ,department = ? ,post = ? ,contact = ? ,access = ? ,status = ? WHERE staff_no = ?")
     // ProjectFile save(String name,String department,String post,String contact,int access,int status,int staffNo);
     List<ProjectFile> findByProjectNo(int projectNo);
+
+    @Transactional
+    @Modifying
+    @Query(nativeQuery = true,value="SELECT *FROM project_file WHERE project_no = ? AND uploader = ?")
+    List<ProjectFile> findByProjectNoAndStaffNo(int projectNo,int staffNo);
 }

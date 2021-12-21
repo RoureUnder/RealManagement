@@ -22,6 +22,7 @@ public class ProjectFile {
     private String module;
     private String detail;
     private String fileName;
+    private String fileSize;
     private String fullPath;
     private Date uploadTime;
     private int uploader;

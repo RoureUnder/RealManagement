@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -19,6 +20,7 @@ import com.group.realmanagement.entity.Projects.JsonTest;
 import com.group.realmanagement.entity.Projects.ProjectFile;
 import com.group.realmanagement.entity.Projects.ProjectInfo;
 import com.group.realmanagement.entity.Projects.ProjectInfoReturn;
+import com.group.realmanagement.entity.User.Staff;
 import com.group.realmanagement.repository.Projects.ProjectFileRepository;
 import com.group.realmanagement.repository.Projects.ProjectInfoRepository;
 import com.group.realmanagement.repository.User.GuestRepository;
@@ -153,7 +155,6 @@ public class ProjectFileHandler {
                 {
                     jObject.put("Result", "error");
                     jObject.put("Message", "路径出错，路径名有误");
-                    jObject.put("ErrorInfo", JsonTest.getIndexOfPath(tempPath[i]));
                     return jObject;
                 }
             }
@@ -207,11 +208,9 @@ public class ProjectFileHandler {
 
 
         int size = (int) file.getSize();
-        JSONObject fileInfo = new JSONObject();
+        
         File dest = new File(fullPath + "/" + fileName);
-        fileInfo.put("Path", fullPath);
-        fileInfo.put("Name", fileName);
-        fileInfo.put("Size", file.getSize());
+        
         dest.mkdirs();
 
         try {
@@ -219,9 +218,16 @@ public class ProjectFileHandler {
 
             file.transferTo(dest); //保存文件
 
+            //记录文件信息
+            JSONObject fileInfo = new JSONObject();
+            fileInfo.put("Path", fullPath);
+            fileInfo.put("Name", fileName);
+            fileInfo.put("Size", getFileSize(dest));
+
             //上传成功 建立数据库映射
             ProjectFile projectFile = new ProjectFile();
             projectFile.setDetailPath(projectInfoReturn,fullPath+"/"+fileName,uploader);
+            projectFile.setFileSize(getFileSize(dest));
             projectFile = projectFileRepository.save(projectFile);
             //
             jObject.put("ProjectFile", projectFile);
@@ -247,21 +253,19 @@ public class ProjectFileHandler {
         try {
         // path是指想要下载的文件的路径
         File file = new File(path);
-        System.out.println(file.getAbsolutePath());
-        // log.info(file.getPath());
+        // System.out.println(file.getAbsolutePath());
         // 获取文件名
         String filename = file.getName();
         // 获取文件后缀名
-        // String ext = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
-        // log.info("文件后缀名：" + ext);
-        
+
+
         // 将文件写入输入流
         FileInputStream fileInputStream = new FileInputStream(file);
         InputStream fis = new BufferedInputStream(fileInputStream);
         byte[] buffer = new byte[fis.available()];
         fis.read(buffer);
         fis.close();
-        
+
         // 清空response
         response.reset();
         // 设置response的Header
@@ -284,12 +288,90 @@ public class ProjectFileHandler {
 
 
     @GetMapping("/findAll")
-    List<ProjectFile> findAll(){
-        return projectFileRepository.findAll();
+    JSONObject findAll(){
+        JSONObject jObject = new JSONObject();
+        List<ProjectFile> projectFiles = projectFileRepository.findAll();
+        if(projectFiles.size()!=0){
+            jObject.put("ProjectFiles", projectFiles);
+            jObject.put("Result", "success");
+            jObject.put("Message", "共找到"+projectFiles.size()+"个文件映射");
+        }
+        else{
+            jObject.put("Result", "error");
+            jObject.put("Message", "数据库中未建立映射，请联系管理员");
+        }
+        return jObject;
     }
 
     @GetMapping("/findByProjectNo")
-    List<ProjectFile> findByProjectNo(int projectNo){
-        return projectFileRepository.findByProjectNo(projectNo);
+    JSONObject findByProjectNo(int projectNo){
+        JSONObject jObject = new JSONObject();
+        ProjectInfo projectInfo = projectInfoRepository.findByProjectNo(projectNo);
+        if(projectInfo == null){
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到该项目，请检查后重试");
+            return jObject;
+        }
+        List<ProjectFile> projectFiles = projectFileRepository.findByProjectNo(projectNo);
+        if(projectFiles.size()!=0){
+            jObject.put("ProjectFiles", projectFiles);
+            jObject.put("Result", "success");
+            jObject.put("Message", "项目 "+projectInfo.getProjectName()+" 共找到"+projectFiles.size()+"个文件映射");
+        }
+        else{
+            jObject.put("Result", "error");
+            jObject.put("Message", "数据库中未建立映射，请联系管理员");
+        }
+        return jObject;
     }
+
+    @GetMapping("/findByProjectNoAndStaffNo")
+    JSONObject findByProjectNoAndStaffNo(int projectNo,int staffNo){
+        JSONObject jObject = new JSONObject();
+        ProjectInfo projectInfo = projectInfoRepository.findByProjectNo(projectNo);
+        Staff staff = staffRepository.findByStaffNo(staffNo);
+        if(projectInfo == null){
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到该项目，请检查后重试");
+            return jObject;
+        }
+        else if(staff == null){
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到该员工信息，请检查后重试");
+            return jObject;
+        }
+        List<ProjectFile> projectFiles = projectFileRepository.findByProjectNo(projectNo);
+        if(projectFiles.size()!=0){
+            jObject.put("ProjectFiles", projectFiles);
+            jObject.put("Result", "success");
+            jObject.put("Message", "项目 "+projectInfo.getProjectName()+" 共找到"+projectFiles.size()+"个"+staff.getName()+"上传的文件映射");
+        }
+        else{
+            jObject.put("Result", "error");
+            jObject.put("Message", "数据库中未建立映射，请联系管理员");
+        }
+        return jObject;
+    }
+
+    public static String getFileSize(File file){
+        String size = "";
+        if(file.exists() && file.isFile()){
+        long fileS = file.length();
+         DecimalFormat df = new DecimalFormat("#.00");
+              if (fileS < 1024) {
+                 size = df.format((double) fileS) + "BT";
+              } else if (fileS < 1048576) {
+                 size = df.format((double) fileS / 1024) + "KB";
+              } else if (fileS < 1073741824) {
+                 size = df.format((double) fileS / 1048576) + "MB";
+              } else {
+                 size = df.format((double) fileS / 1073741824) +"GB";
+              }
+        }else if(file.exists() && file.isDirectory()){
+        size = "";
+        }else{
+        size = "0BT";
+        }
+        return size;
+       }
 }

@@ -19,9 +19,9 @@ public class RealmanagementApplication {
         MultipartConfigFactory multipartConfigFactory = new MultipartConfigFactory();
         // 超出大小限制的异常怎么catch
         // 单个文件大小不得超过20KB
-        multipartConfigFactory.setMaxFileSize(DataSize.parse("1GB"));
+        multipartConfigFactory.setMaxFileSize(DataSize.parse("5GB"));
         // 多个文件总大小不得超过20KB
-        multipartConfigFactory.setMaxRequestSize(DataSize.parse("1GB"));
+        multipartConfigFactory.setMaxRequestSize(DataSize.parse("5GB"));
         // 怎么限制上传文件类型
         return multipartConfigFactory.createMultipartConfig();
     }
