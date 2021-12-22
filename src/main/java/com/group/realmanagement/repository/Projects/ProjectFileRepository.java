@@ -21,4 +21,10 @@ public interface ProjectFileRepository extends JpaRepository<ProjectFile,Integer
     @Modifying
     @Query(nativeQuery = true,value="SELECT *FROM project_file WHERE project_no = ? AND uploader = ?")
     List<ProjectFile> findByProjectNoAndStaffNo(int projectNo,int staffNo);
+
+
+    @Transactional
+    @Modifying
+    @Query(nativeQuery = true,value="DELETE FROM project_file WHERE no = ?")
+    boolean deleteByProjectFileNo(int projectFileNo);
 }

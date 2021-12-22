@@ -2,6 +2,7 @@ package com.group.realmanagement.controller.User;
 
 import java.util.List;
 
+import com.alibaba.fastjson.JSONObject;
 import com.group.realmanagement.entity.User.Guest;
 import com.group.realmanagement.repository.User.GuestRepository;
 
@@ -28,6 +29,21 @@ public class GuestHandler {
     @GetMapping("/findByGuestName")
     List<Guest> findByGuestName(String guestName){
         return guestRepository.findByGuestName(guestName);
+    }
+
+    @GetMapping("/findByGuestNo")
+    JSONObject findByGuestNo(int guestNo){
+        JSONObject jObject = new JSONObject();
+        Guest guest = guestRepository.findByGuestNo(guestNo);
+        if(guest != null){
+            jObject.put("Guest", guest);
+            jObject.put("Result", "success");
+        }
+        else{
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到该员工，请检查后重试");
+        }
+        return jObject;
     }
 
     @PostMapping("/create")

@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -27,6 +28,7 @@ import com.group.realmanagement.repository.User.GuestRepository;
 import com.group.realmanagement.repository.User.StaffRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -353,6 +355,37 @@ public class ProjectFileHandler {
         return jObject;
     }
 
+    @DeleteMapping("/deleteByProjectFileNo")
+    JSONObject deleteByProjectFileNo(int projectFileNo){
+        JSONObject jObject = new JSONObject();
+        Optional<ProjectFile> projectFile = projectFileRepository.findById(projectFileNo);
+        if(!projectFile.isEmpty()){
+            jObject.put("ProjectFile", projectFile);
+            File file = new File(projectFile.get().getFullPath());
+            if(!file.exists()){
+                jObject.put("Result", "error");
+                jObject.put("Message", "文件不存在");
+            }
+            else{
+                if(file.delete()){
+                    
+                    projectFileRepository.delete(projectFile.get());
+                    jObject.put("Message", "本地删除成功，服务器映射删除");
+                }
+                else{
+                    jObject.put("Message", "本地删除失败");
+                }
+            }
+        }
+        else{
+            jObject.put("Result", "error");
+            jObject.put("Message", "服务器未找到该文件，请联系管理员");
+        }
+        return jObject;
+    }
+
+
+    //计算文件大小
     public static String getFileSize(File file){
         String size = "";
         if(file.exists() && file.isFile()){
