@@ -58,7 +58,12 @@ public class ProjectFileRepositoryTest {
 
     @Test
     void findProjectFileByProjectNoAndStaffNo(){
-        System.out.println(projectFileRepository.findByProjectNoAndStaffNo(10001, 10001));
+        String path= "E:/一级/二级///四级/temp.jpg";
+        String paths[]=path.split("/");
+        System.out.println(paths.length);
+        for (String string : paths) {
+            System.out.println(string);
+        }
     }
 
     @Test

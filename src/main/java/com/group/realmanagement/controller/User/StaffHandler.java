@@ -1,6 +1,7 @@
 package com.group.realmanagement.controller.User;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.alibaba.fastjson.JSONObject;
 import com.group.realmanagement.entity.User.Staff;
@@ -36,9 +37,26 @@ public class StaffHandler {
         }
         else{
             jObject.put("Result", "error");
+            jObject.put("Message", "未找到员工，请检查后重试");
         }
         return jObject;
     }
+
+    @GetMapping("/findByStaffNo")
+    public JSONObject findByStaffNo(int staffNo){
+        JSONObject jObject = new JSONObject();
+        Staff staff = staffRepository.findByStaffNo(staffNo);
+        if(staff!=null){
+            jObject.put("Result", "success");
+            jObject.put("Staff", staff);
+        }
+        else{
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到员工，请检查后重试");
+        }
+        return jObject;
+    }
+
 
     @PostMapping("/create")
     public String save(@RequestBody Staff staff){

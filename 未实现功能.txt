@@ -10,7 +10,8 @@
     查找所有项目文件映射：已实现
     查找指定项目文件映射(projectNo)：已实现
     查找指定项目文件映射(projectNo+staffNo): 已实现
-
+    删除指定项目文件(单个)：已实现
+    删除指定项目(多个)：
 
 
 项目-->资料
@@ -21,7 +22,12 @@
 项目操作逻辑
     1.project_info表中建立对应信息：已实现
     2.初始化本地文件目录：已实现
-    3.员工可以上传文件：已实现      -->upload接口(file,path,projectNo,staffNo)-->信息无误-->查找重复映射-->文件存入-->写入映射-->返回结果
+
+
+        3.主管登录系统分配任务：未实现
+        3.员工上传文件：已实现      -->upload接口(file,path,projectNo,staffNo,principalNo)-->信息无误-->查找重复映射-->文件存入-->写入映射-->返回结果
+        4.主管审核：未实现                  -->从project_file_preview表中复制映射到project_file表
+
     4.下载文件：已实现              -->从project_file表中查询文件path-->download接口(path)-->返回文件
     5.删除文件：未实现
         单个()          -->从project_file表查找对应path-->delete接口(path)-->删除文件-->删除映射-->返回结果

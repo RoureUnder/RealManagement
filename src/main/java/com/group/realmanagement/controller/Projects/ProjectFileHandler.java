@@ -19,10 +19,12 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.group.realmanagement.entity.Projects.JsonTest;
 import com.group.realmanagement.entity.Projects.ProjectFile;
+import com.group.realmanagement.entity.Projects.ProjectFileReview;
 import com.group.realmanagement.entity.Projects.ProjectInfo;
 import com.group.realmanagement.entity.Projects.ProjectInfoReturn;
 import com.group.realmanagement.entity.User.Staff;
 import com.group.realmanagement.repository.Projects.ProjectFileRepository;
+import com.group.realmanagement.repository.Projects.ProjectFileReviewRepository;
 import com.group.realmanagement.repository.Projects.ProjectInfoRepository;
 import com.group.realmanagement.repository.User.GuestRepository;
 import com.group.realmanagement.repository.User.StaffRepository;
@@ -44,6 +46,8 @@ public class ProjectFileHandler {
     private ProjectInfoRepository projectInfoRepository;
     @Autowired
     private ProjectFileRepository projectFileRepository;
+    @Autowired
+    private ProjectFileReviewRepository projectFileReviewRepository;
     @Autowired
     private StaffRepository staffRepository;
     @Autowired
@@ -119,12 +123,11 @@ public class ProjectFileHandler {
 
     @RequestMapping("/upload")
     @ResponseBody
-    public JSONObject fileUpload(@RequestParam("projectNo") int projectNo,@RequestParam("staffNo") int uploader,@RequestParam("file") MultipartFile file,@RequestParam("path") String path){//上传单个文件
+    public JSONObject fileUpload(@RequestParam("projectNo") int projectNo,@RequestParam("staffNo") int uploader,@RequestParam("file") MultipartFile file,@RequestParam("path") String path,@RequestParam("principalNo") int principalNo){//上传单个文件
         JSONObject jObject = new JSONObject();
         ProjectInfo projectInfo = projectInfoRepository.findByProjectNo(projectNo);
-        
-        System.out.println(staffRepository.findByStaffNo(uploader));
-        
+
+
         //检测参数是否正确
         //1.项目编号(project表中是否存在)
         //2.员工编号(staff表中是否存在)
@@ -138,6 +141,11 @@ public class ProjectFileHandler {
         else if(staffRepository.findByStaffNo(uploader)==null){
             jObject.put("Result", "error");
             jObject.put("Message", "未找到对应员工信息");
+            return jObject;
+        }
+        else if(staffRepository.findByStaffNo(principalNo)==null&&staffRepository.findByStaffNo(principalNo).getAccess()!=1){//还未验证是否为主管Access = ?
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到对应主管信息");
             return jObject;
         }
         else if(file.isEmpty()){
@@ -201,22 +209,33 @@ public class ProjectFileHandler {
                 jObject.put("Result", "error");
                 jObject.put("Message", "数据库中已生成映射，请勿重复上传。"
                                         +"  上次上传时间："+projectFile.getUploadTime()
-                                        +"  上传者"+staffRepository.findByStaffNo(uploader).getName());
+                                        +"  上传者"+staffRepository.findByStaffNo(projectFile.getUploader()).getName());
+                return jObject;
+            }
+        }
+        List<ProjectFileReview> projectFileReviews = projectFileReviewRepository.findByProjectNo(projectNo);
+        for (ProjectFileReview projectFileReview : projectFileReviews) {
+            if(projectFileReview.getFullPath().equals(fullPath + "/" + fileName)){
+                jObject.put("Result", "error");
+                jObject.put("Message", "数据库中已生成映射，请勿重复上传。"
+                                        +"  上次上传时间："+projectFileReview.getUploadTime()
+                                        +"  上传者："+staffRepository.findByStaffNo(projectFileReview.getUploader()).getName()
+                                        +"  审核者："+staffRepository.findByStaffNo(projectFileReview.getPrincipalNo()).getName()
+                                        +"  当前状态："+projectFileReview.getStatus());
                 return jObject;
             }
         }
 
 
 
-
         int size = (int) file.getSize();
-        
+
         File dest = new File(fullPath + "/" + fileName);
-        
+
         dest.mkdirs();
 
         try {
-            // List<ProjectFile> projectFiles = 
+            // List<ProjectFile> projectFiles =
 
             file.transferTo(dest); //保存文件
 
@@ -231,8 +250,14 @@ public class ProjectFileHandler {
             projectFile.setDetailPath(projectInfoReturn,fullPath+"/"+fileName,uploader);
             projectFile.setFileSize(getFileSize(dest));
             projectFile = projectFileRepository.save(projectFile);
+
+            ProjectFileReview projectFileReview = new ProjectFileReview();
+            projectFileReview.setReviewByFile(projectFile, principalNo);
+            projectFile = projectFileRepository.save(projectFile);
             //
+            projectFileReview = projectFileReviewRepository.save(projectFileReview);
             jObject.put("ProjectFile", projectFile);
+            jObject.put("ProjectFileReview", projectFileReview);
             jObject.put("Result", "success");
             jObject.put("FileInfo", fileInfo);
         } catch (IllegalStateException e) {
@@ -278,6 +303,8 @@ public class ProjectFileHandler {
         response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
         // 告知浏览器文件的大小
         response.addHeader("Content-Length", "" + file.length());
+        response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader("Access-Control-Allow-Credentials", "true");
         OutputStream outputStream = new BufferedOutputStream(response.getOutputStream());
         response.setContentType("application/octet-stream");
         outputStream.write(buffer);
@@ -285,7 +312,7 @@ public class ProjectFileHandler {
         } catch (IOException ex) {
         ex.printStackTrace();
         }
-        }
+    }
 
 
 
@@ -368,11 +395,12 @@ public class ProjectFileHandler {
             }
             else{
                 if(file.delete()){
-                    
                     projectFileRepository.delete(projectFile.get());
+                    jObject.put("Result", "success");
                     jObject.put("Message", "本地删除成功，服务器映射删除");
                 }
                 else{
+                    jObject.put("Result", "success");
                     jObject.put("Message", "本地删除失败");
                 }
             }
