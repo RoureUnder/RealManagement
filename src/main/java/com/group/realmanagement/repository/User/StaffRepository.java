@@ -28,4 +28,9 @@ public interface StaffRepository extends JpaRepository<Staff,Integer>{
     List<Staff> findByStaffName(String name);
 
     Staff findByStaffNo(int staffNo);
+
+    @Transactional
+    @Modifying
+    @Query(nativeQuery = true,value = "SELECT *FROM staff WHERE department = ?")
+    List<Staff> findByDepartmentName(String departmentName);
 }

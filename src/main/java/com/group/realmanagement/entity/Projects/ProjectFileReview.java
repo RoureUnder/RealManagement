@@ -1,6 +1,5 @@
 package com.group.realmanagement.entity.Projects;
 
-
 import java.util.Date;
 
 import javax.persistence.Entity;
@@ -9,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import lombok.Data;
+
 @Data
 @Entity
 public class ProjectFileReview {
@@ -16,6 +16,7 @@ public class ProjectFileReview {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int no;
     private int projectNo;
+    private int taskNo;
     private String homeFloder;
     private String module;
     private String detail;
@@ -26,11 +27,13 @@ public class ProjectFileReview {
     private Date uploadTime;
     private int principalNo;
     private int status;
+    private Date processTime;
     private String suggestion;
 
-    public void setReviewByFile(ProjectFile projectFile,int principalNo){
-        this.projectNo=projectFile.getProjectNo();
-        this.homeFloder=projectFile.getHomeFloder();
+    public void setReviewByFile(ProjectFile projectFile, int principalNo) {
+        this.projectNo = projectFile.getProjectNo();
+        this.taskNo = projectFile.getTaskNo();
+        this.homeFloder = projectFile.getHomeFloder();
         this.module = projectFile.getModule();
         this.detail = projectFile.getDetail();
         this.fileName = projectFile.getFileName();
@@ -39,7 +42,7 @@ public class ProjectFileReview {
         this.uploader = projectFile.getUploader();
         this.uploadTime = projectFile.getUploadTime();
         this.principalNo = principalNo;
-        this.status=0;
-        this.suggestion="";
+        this.status = 0;
+        this.suggestion = "";
     }
 }

@@ -10,6 +10,7 @@ import com.group.realmanagement.entity.User.User;
 import com.group.realmanagement.repository.User.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -93,6 +94,7 @@ public class UserHandler {
         else return "{\"Message\":\"error\"}";
     }
 
+    @CrossOrigin
     @PostMapping("/login")
     public JSONObject login(String userName,String password){
         password = encryptBASE64(password.getBytes());//加密密码

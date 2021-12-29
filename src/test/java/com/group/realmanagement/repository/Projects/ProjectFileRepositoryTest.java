@@ -2,6 +2,8 @@ package com.group.realmanagement.repository.Projects;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import com.alibaba.fastjson.JSON;
@@ -82,5 +84,14 @@ public class ProjectFileRepositoryTest {
                     size = df.format((double) fileS / 1073741824) +"GB";
                 }
         System.out.println(size);
+  }
+  @Test
+  void getDate(){
+      Date date = new Date();
+      System.out.println(date);
+      long times = date.getTime();//时间戳
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+    String dateString = formatter.format(date);
+    System.out.println(dateString);
   }
 }

@@ -1,5 +1,10 @@
 package com.group.realmanagement.repository.User;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.group.realmanagement.entity.User.Staff;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,5 +36,19 @@ public class StaffRepositoryTest {
     @Test
     void findByStaffNo(){
         System.out.println(staffRepository.findByStaffNo(10001));
+    }
+
+    @Test
+    void findPrincipal(){
+        List<Staff> staffs = staffRepository.findAll();
+        List<Staff> staffs2 = new ArrayList<>();
+        for (Staff staff : staffs) {
+            if(staff.getPost().equals("模型主管")){
+                System.out.println(staff.getPost());
+            }
+            
+        }
+        // System.out.println(staffs);
+        // System.out.println(staffs2);
     }
 }
