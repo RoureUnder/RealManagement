@@ -31,7 +31,6 @@ import com.group.realmanagement.repository.User.StaffRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileSystemUtils;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -140,10 +139,10 @@ public class ProjectFileHandler {
             jObject.put("Message", "未找到对应员工信息");
             return jObject;
         } else if (principal == null
-                && principal.getAccess() != 1 && principal.getAccess() != 3 && principal.getAccess() != 5
-                && principal.getAccess() != 7) {
+                ||( principal.getAccess() != 1 && principal.getAccess() != 3 && principal.getAccess() != 5
+                && principal.getAccess() != 7)) {
             jObject.put("Result", "error");
-            jObject.put("Message", "未找到对应主管信息");
+            jObject.put("Message", "未找到对应主管信息，或主管信息错误");
             return jObject;
         } else if (file.isEmpty()) {
             jObject.put("Result", "error");
@@ -464,7 +463,7 @@ public class ProjectFileHandler {
     }
 
     public static String getFormatDate(Date date) {
-        long times = date.getTime();// 时间戳
+
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         String dateString = formatter.format(date);
         return dateString;

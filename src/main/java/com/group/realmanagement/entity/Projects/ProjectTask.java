@@ -26,4 +26,20 @@ public class ProjectTask {
     private String reason;
     private int finished;
     private int projectFileNo;
+
+    public ProjectTask(){}
+    public ProjectTask(ProjectTaskReturn projectTaskReturn){
+        this.no=projectTaskReturn.getNo();
+        this.projectNo = projectTaskReturn.getProjectNo();
+        this.taskStage= projectTaskReturn.getTaskStage();
+        this.taskContent= projectTaskReturn.getTaskContent();
+        this.senderNo= projectTaskReturn.getSenderNo();
+        this.receiverNo= projectTaskReturn.getReceiverNo();
+        this.sendTime= projectTaskReturn.getSendTime();
+        this.processTime= projectTaskReturn.getProcessTime();
+        this.status= projectTaskReturn.getStatus();
+        this.reason= projectTaskReturn.getReason();
+        this.finished= projectTaskReturn.getFinished();
+        this.projectFileNo= projectTaskReturn.getProjectFileNo();
+    }
 }

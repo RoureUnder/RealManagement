@@ -2,15 +2,13 @@ package com.group.realmanagement.controller.User;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.group.realmanagement.entity.User.Staff;
 import com.group.realmanagement.repository.User.StaffRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.batch.BatchProperties.Job;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -70,6 +68,11 @@ public class StaffHandler {
             return jObject;
         }
         List<Staff> staffs = staffRepository.findByDepartmentName(staff.getDepartment());
+        if(staffs.size()==0){
+            jObject.put("Result", "error");
+            jObject.put("Message", "该部门下无员工");
+            return jObject;
+        }
         jObject.put("Staffs", staffs);
         jObject.put("Result", "success");
         return jObject;

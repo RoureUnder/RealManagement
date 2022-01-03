@@ -1,6 +1,7 @@
 package com.group.realmanagement.repository.Projects;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.transaction.Transactional;
 
@@ -19,4 +20,8 @@ public interface ProjectInfoRepository extends JpaRepository<ProjectInfo, Intege
     int updateByProjectNo(String projectName, int guestNo, int principalNo, int modelNo, int renderNo, int lateNo,
             Date startTime, Date endTime, int status, int projectNo);
 
+    List<ProjectInfo> findByModelNo(int modelNo);
+    List<ProjectInfo> findByRenderNo(int renderNo);
+    List<ProjectInfo> findByLateNo(int lateNo);
+    List<ProjectInfo> findByPrincipalNo(int principalNo);
 }

@@ -1,6 +1,6 @@
 package com.group.realmanagement.repository.User;
 
-import com.group.realmanagement.entity.User.User;
+
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

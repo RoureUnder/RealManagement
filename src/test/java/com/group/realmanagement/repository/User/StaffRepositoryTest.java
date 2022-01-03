@@ -1,6 +1,6 @@
 package com.group.realmanagement.repository.User;
 
-import java.util.ArrayList;
+
 import java.util.List;
 
 import com.group.realmanagement.entity.User.Staff;
@@ -41,14 +41,13 @@ public class StaffRepositoryTest {
     @Test
     void findPrincipal(){
         List<Staff> staffs = staffRepository.findAll();
-        List<Staff> staffs2 = new ArrayList<>();
+
         for (Staff staff : staffs) {
             if(staff.getPost().equals("模型主管")){
                 System.out.println(staff.getPost());
             }
-            
+
         }
-        // System.out.println(staffs);
-        // System.out.println(staffs2);
+
     }
 }

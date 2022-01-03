@@ -10,22 +10,22 @@ import java.util.Optional;
 import com.alibaba.fastjson.JSONObject;
 import com.group.realmanagement.entity.Projects.ProjectFile;
 import com.group.realmanagement.entity.Projects.ProjectFileReview;
-import com.group.realmanagement.entity.Projects.ProjectInfo;
+
 import com.group.realmanagement.entity.Projects.ProjectTask;
 import com.group.realmanagement.entity.User.Staff;
 import com.group.realmanagement.repository.Projects.ProjectFileRepository;
 import com.group.realmanagement.repository.Projects.ProjectFileReviewRepository;
-import com.group.realmanagement.repository.Projects.ProjectInfoRepository;
+
 import com.group.realmanagement.repository.Projects.ProjectTaskRepository;
 import com.group.realmanagement.repository.User.StaffRepository;
 
-import org.hibernate.engine.transaction.jta.platform.internal.JOnASJtaPlatform;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/project/file/review")
@@ -110,6 +110,7 @@ public class ProjectFileReviewHandler {
         // 写入project_file新映射
         projectFile = projectFileRepository.save(projectFile);
         // 修改任务状态为已完成
+        projectTask.get().setReason("任务已完成");
         projectTask.get().setFinished(1);
         projectTask.get().setProjectFileNo(projectFile.getNo());
         ProjectTask projectTask2 = projectTaskRepository.save(projectTask.get());

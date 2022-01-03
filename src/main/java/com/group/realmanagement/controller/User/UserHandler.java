@@ -6,7 +6,9 @@ import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 
 import com.alibaba.fastjson.JSONObject;
+import com.group.realmanagement.entity.User.Staff;
 import com.group.realmanagement.entity.User.User;
+import com.group.realmanagement.repository.User.StaffRepository;
 import com.group.realmanagement.repository.User.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserHandler {
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private StaffRepository staffRepository;
 
     // @Autowired
     // private StaffRepository staffRepository;
@@ -113,7 +117,23 @@ public class UserHandler {
         return jObject;
     }
 
-
+    @PutMapping("/changeStatus")
+    public JSONObject changeStatus(String staffNo,boolean status){
+        JSONObject jObject = new JSONObject();
+        Staff staff = staffRepository.findByStaffNo(Integer.parseInt(staffNo));
+        int online = status?1:0;
+        if(staff !=null){
+            staff.setStatus(online);
+            staffRepository.save(staff);
+            jObject.put("Result", "success");
+            jObject.put("Staff", staff);
+        }
+        else{
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到该员工");
+        }
+        return jObject;
+    }
 
 
 

@@ -1,6 +1,7 @@
 package com.group.realmanagement.controller.Projects;
 
 import java.io.File;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -15,7 +16,7 @@ import com.group.realmanagement.entity.Projects.ProjectInfoReturn;
 import com.group.realmanagement.entity.Projects.ProjectTask;
 import com.group.realmanagement.entity.User.Guest;
 import com.group.realmanagement.entity.User.Staff;
-import com.group.realmanagement.entity.User.User;
+
 import com.group.realmanagement.repository.Projects.ProjectFileRepository;
 import com.group.realmanagement.repository.Projects.ProjectFileReviewRepository;
 import com.group.realmanagement.repository.Projects.ProjectInfoRepository;
@@ -23,7 +24,7 @@ import com.group.realmanagement.repository.Projects.ProjectTaskRepository;
 import com.group.realmanagement.repository.User.GuestRepository;
 import com.group.realmanagement.repository.User.StaffRepository;
 
-import org.aspectj.internal.lang.annotation.ajcDeclareAnnotation;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,7 +33,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -81,7 +82,46 @@ public class ProjectInfoHandler {
             jObject.put("Result", "error");
             jObject.put("Message", "未找到该项目，请联系管理员");
         }
+        return jObject;
+    }
 
+    @GetMapping("/findByPrincipalNo")
+    JSONObject findByPrincipalNo(int principalNo) {
+        JSONObject jObject = new JSONObject();
+        Staff staff = staffRepository.findByStaffNo(principalNo);
+        if(staff == null){
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到该主管");
+            return jObject;
+        }
+        List<ProjectInfo> projectInfos = new ArrayList<>();
+        projectInfos = projectInfoRepository.findByModelNo(principalNo);
+        projectInfos.addAll(projectInfoRepository.findByRenderNo(principalNo));
+        projectInfos.addAll(projectInfoRepository.findByLateNo(principalNo));
+        projectInfos.addAll(projectInfoRepository.findByPrincipalNo(principalNo));
+        int flag=0;
+        for (int i =0;i<projectInfos.size();i++) {
+            for(int j =i+1;j<projectInfos.size();j++){
+                if(projectInfos.get(i).equals(projectInfos.get(j))){
+                    projectInfos.remove(projectInfos.get(j));
+                    j--;
+                    flag++;
+                }
+            }
+        }
+        jObject.put("flag", flag);
+        List<ProjectInfoReturn> projectInfoReturns = new ArrayList<>();
+        for (ProjectInfo projectInfo : projectInfos) {
+            ProjectInfoReturn tempProjectInfoReturn = new ProjectInfoReturn(projectInfo,staffRepository,guestRepository);
+            projectInfoReturns.add(tempProjectInfoReturn);
+        }
+        if (projectInfoReturns.size() != 0) {
+            jObject.put("ProjectInfoReturns", projectInfoReturns);
+            jObject.put("Result", "success");
+        } else {
+            jObject.put("Result", "error");
+            jObject.put("Message", "该主管项目为空");
+        }
         return jObject;
     }
 
@@ -177,6 +217,7 @@ public class ProjectInfoHandler {
         jObject.put("项目目录", fullPath);
         File dest = new File(fullPath);
         jObject.put("删除文件结果", FileSystemUtils.deleteRecursively(dest));
+        jObject.put("Result", "success");
         return jObject;
         }
 
