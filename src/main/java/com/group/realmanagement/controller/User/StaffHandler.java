@@ -189,7 +189,7 @@ public class StaffHandler {
     public String update(@RequestBody Staff staff){
         // staff.setPassword();//加密后存入数据库
         int res = staffRepository.updateByStaffNo(staff.getName(),staff.getDepartment(),staff.getPost(),staff.getContact(),
-            staff.getAccess(),staff.getStatus(),staff.getStaffNo());
+            staff.getAccess(),0,staff.getStaffNo());
         if(res==1)
         {
             return "{\"Message\":\"success\"}";
