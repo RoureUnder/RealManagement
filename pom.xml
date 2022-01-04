@@ -53,7 +53,13 @@
             <artifactId>fastjson</artifactId> 
             <version>1.2.40</version> 
         </dependency>
-	</dependencies>
+	
+   <dependency>
+     <groupId>com.hynnet</groupId>
+     <artifactId>jxl</artifactId>
+     <version>2.6.12.1</version>
+   </dependency>
+ </dependencies>
 
 	<build>
 		<plugins>

@@ -146,7 +146,7 @@ public class ProjectTaskHandler {
         return jObject;
     }
 
-    @PutMapping("/submit")//提交任务
+    @PutMapping("/submit")//提交空任务
     public JSONObject submitTask(@RequestBody ProjectTask projectTask){
         JSONObject jObject = new JSONObject();
         projectTask.setProcessTime(new Date());

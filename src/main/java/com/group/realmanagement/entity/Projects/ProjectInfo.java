@@ -28,6 +28,7 @@ public class ProjectInfo {
     private Date startTime;
     private Date endTime;
     private int status;
+    private Double offer;
 
     public ProjectInfo(){
         
@@ -47,5 +48,6 @@ public class ProjectInfo {
         this.startTime = projectInfoReturn.getStartTime();
         this.endTime = projectInfoReturn.getEndTime();
         this.status = projectInfoReturn.getStatus();
+        this.offer = projectInfoReturn.getOffer();
     }
 }

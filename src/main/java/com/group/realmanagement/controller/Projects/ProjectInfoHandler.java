@@ -52,6 +52,19 @@ public class ProjectInfoHandler {
     @Autowired
     private GuestRepository guestRepository;
 
+    @GetMapping("/findAllOrigin")
+    JSONObject findAllOrigin() {
+        JSONObject jObject = new JSONObject();
+        List<ProjectInfo> projectInfos = projectInfoRepository.findAll();
+        if (projectInfos.size() != 0) {
+            jObject.put("ProjectInfos", projectInfos);
+            jObject.put("Result", "success");
+        } else {
+            jObject.put("Result", "error");
+        }
+        return jObject;
+    }
+
     @GetMapping("/findAll")
     JSONObject findAll() {
         JSONObject jObject = new JSONObject();
@@ -66,6 +79,62 @@ public class ProjectInfoHandler {
             jObject.put("Result", "success");
         } else {
             jObject.put("Result", "error");
+        }
+        return jObject;
+    }
+
+    @GetMapping("/findByGuestName")
+    JSONObject findByGuestName(String guestName) {
+        JSONObject jObject = new JSONObject();
+        List<ProjectInfo> projectInfos = projectInfoRepository.findAll();
+        List<ProjectInfoReturn> projectInfoReturns = new ArrayList<>();
+        if (projectInfos.size() != 0) {
+            for (ProjectInfo projectInfo : projectInfos) {
+                ProjectInfoReturn tempProjectInfoReturn = new ProjectInfoReturn(projectInfo, staffRepository, guestRepository);
+                if(tempProjectInfoReturn.getGuestName().indexOf(guestName)!=-1){
+                    projectInfoReturns.add(tempProjectInfoReturn);
+                }
+            }
+            if (projectInfoReturns.size() != 0) {
+                jObject.put("ProjectInfoReturns", projectInfoReturns);
+                jObject.put("Result", "success");
+            }
+            else{
+                jObject.put("Result", "error");
+                jObject.put("Message", "未找到项目信息");
+            }
+        }
+        else {
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到项目信息");
+        }
+        return jObject;
+    }
+
+    @GetMapping("/findByStartTime")
+    JSONObject findByStartTime(String startTime) {
+        JSONObject jObject = new JSONObject();
+        List<ProjectInfo> projectInfos = projectInfoRepository.findAll();
+        List<ProjectInfoReturn> projectInfoReturns = new ArrayList<>();
+        if (projectInfos.size() != 0) {
+            for (ProjectInfo projectInfo : projectInfos) {
+                ProjectInfoReturn tempProjectInfoReturn = new ProjectInfoReturn(projectInfo, staffRepository, guestRepository);
+                if(tempProjectInfoReturn.getStartTime().toString().indexOf(startTime)!=-1){
+                    projectInfoReturns.add(tempProjectInfoReturn);
+                }
+            }
+            if (projectInfoReturns.size() != 0) {
+                jObject.put("ProjectInfoReturns", projectInfoReturns);
+                jObject.put("Result", "success");
+            }
+            else{
+                jObject.put("Result", "error");
+                jObject.put("Message", "未找到项目信息");
+            }
+        }
+        else {
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到项目信息");
         }
         return jObject;
     }
@@ -219,8 +288,298 @@ public class ProjectInfoHandler {
         jObject.put("删除文件结果", FileSystemUtils.deleteRecursively(dest));
         jObject.put("Result", "success");
         return jObject;
-        }
+    }
 
+    @DeleteMapping("/rollback")
+    JSONObject rollback(int projectNo,int destStage){//回滚项目 参数：项目编号、目标阶段
+        JSONObject jObject = new JSONObject();
+        //1.验证项目信息和当前阶段
+        ProjectInfo projectInfo = projectInfoRepository.findByProjectNo(projectNo);
+        if(projectInfo==null){
+            jObject.put("Result", "error");
+            jObject.put("Message", "未找到项目信息");
+            return jObject;
+        }
+        int stage = 0;
+        if(projectInfo.getModelStatus()==2){
+            stage = 1;
+        }
+        if(projectInfo.getRenderStatus()==2){
+            stage = 2;
+        }
+        if(projectInfo.getLateStatus()==2){
+            stage = 3;
+        }
+        /*  destStage回滚目标阶段(要求值为1、2、3，且目标阶段需小于等于当前完成阶段)
+        *   1.回滚到模型阶段(删除除资料外的所有文件和任务)
+        *   2.回滚到渲染阶段(删除除资料/模型外的所有文件和任务)
+        *   3.回滚到后期阶段(删除除资料/模型/渲染外的所有文件和任务)
+        */
+        if((destStage!=1&&destStage!=2&&destStage!=3)||destStage>stage){
+            jObject.put("Result", "error");
+            jObject.put("ProjectInfo", projectInfo);
+            jObject.put("Message", "目标阶段不符合要求  destStage:"+destStage+" stage="+stage);
+            return jObject;
+        }
+        //进行项目回滚(查找所有的文件、审核和任务)
+        /**
+         * 文件
+         *  资料(taskNo==0)/模型/渲染/后期                      =>删除数据库+本地文件
+         * 审核
+         *  成功上传的文件(project_file中一定是保存过的)        =>  仅删除数据库记录
+         *  拒绝的文件(未在project_file中保存,但本地中有文件)   =>  删除数据库+本地文件
+         * 任务
+         *  空任务(projectFileNo=0)和已完成的任务               =>  删除数据库
+         */
+        //
+        List<ProjectFile> projectFiles = projectFileRepository.findByProjectNo(projectInfo.getProjectNo());
+        List<ProjectFileReview> projectFileReviews = projectFileReviewRepository.findByProjectNo(projectInfo.getProjectNo());
+        List<ProjectTask> projectTasks = projectTaskRepository.findByProjectNo(projectInfo.getProjectNo());
+
+        JSONObject project_file = new JSONObject();
+        JSONObject project_file_review = new JSONObject();
+        JSONObject project_task = new JSONObject();
+
+        List<ProjectFile> projectFileReturns = new ArrayList<>();
+        List<ProjectFileReview> projectFileReviewReturns = new ArrayList<>();
+        List<ProjectTask> projectTaskReturns = new ArrayList<>();
+
+        switch(destStage){
+            case 1:{
+                /*  回滚到模型阶段
+                 *  projectFile
+                 *      删除除资料/小样外的所有文件和数据库记录
+                 *  projectFileReview
+                 *      删除所有通过的审核记录+文件   未通过的记录
+                 *  projectTask
+                 *      删除所有任务
+                 */
+                for (ProjectFile projectFile : projectFiles) {
+                    if(projectFile.getModule().equals("资料")||projectFile.getModule().equals("小样")){
+                        continue;
+                    }
+                    File file = new File(projectFile.getFullPath());
+                    if (!file.exists()) {
+                        jObject.put("Result", "error");
+                        jObject.put("Message", "文件不存在");
+                        return jObject;
+                    } else {
+                        if (file.delete()) {
+                            projectFileRepository.delete(projectFile);
+                            projectFileReturns.add(projectFile);
+                        } else {
+                            jObject.put("Result", "error");
+                            jObject.put("Message", "本地删除失败");
+                            return jObject;
+                        }
+                    }
+                }
+                for (ProjectFileReview projectFileReview : projectFileReviews) {
+                    if(projectFileReview.getModule().equals("资料")||projectFileReview.getModule().equals("小样")){
+                        continue;
+                    }
+                    if(projectFileReview.getStatus()==2){
+                        File file = new File(projectFileReview.getFullPath());
+                        if (!file.exists()) {
+                            jObject.put("Result", "error");
+                            jObject.put("Message", "文件不存在");
+                            return jObject;
+                        } else {
+                            if (file.delete()) {
+                                projectFileReviewRepository.delete(projectFileReview);
+                                projectFileReviewReturns.add(projectFileReview);
+                            } else {
+                                jObject.put("Result", "error");
+                                jObject.put("Message", "本地删除失败");
+                                return jObject;
+                            }
+                        }
+                    }
+                    else{
+                        projectFileReviewRepository.delete(projectFileReview);
+                        projectFileReviewReturns.add(projectFileReview);
+                    }
+                }
+                for (ProjectTask projectTask : projectTasks) {
+                    projectTaskRepository.delete(projectTask);
+                    projectTaskReturns.add(projectTask);
+                }
+                //修改当前项目状态
+                projectInfo.setModelStatus(1);
+                projectInfo.setRenderStatus(0);
+                projectInfo.setLateStatus(0);
+                projectInfo.setStatus(1);
+                break;
+            }
+            case 2:{
+                /**
+                 * 回滚到渲染阶段
+                 *  projectFile
+                 *      删除除资料/小样/模型外的所有文件+数据库记录
+                 *  projectFileReview
+                 *      删除除模型外的所有未通过的文件+数据库记录 除模型外的所有通过的数据库记录
+                 *  projectTask
+                 *      删除除模型外的所有任务(根据receiver_no的对应权限来判断    模型34 渲染56 后期78)
+                 */
+                for (ProjectFile projectFile : projectFiles) {
+                    if(projectFile.getModule().equals("资料")||projectFile.getModule().equals("小样")||projectFile.getModule().equals("模型")){
+                        continue;
+                    }
+                    File file = new File(projectFile.getFullPath());
+                    if (!file.exists()) {
+                        jObject.put("Result", "error");
+                        jObject.put("Message", "文件不存在");
+                        return jObject;
+                    } else {
+                        if (file.delete()) {
+                            projectFileRepository.delete(projectFile);
+                            projectFileReturns.add(projectFile);
+                        } else {
+                            jObject.put("Result", "error");
+                            jObject.put("Message", "本地删除失败");
+                            return jObject;
+                        }
+                    }
+                }
+                for (ProjectFileReview projectFileReview : projectFileReviews) {
+                    if(projectFileReview.getModule().equals("资料")||projectFileReview.getModule().equals("小样")||projectFileReview.getModule().equals("模型")){
+                        continue;
+                    }
+                    if(projectFileReview.getStatus()==2){
+                        File file = new File(projectFileReview.getFullPath());
+                        if (!file.exists()) {
+                            jObject.put("Result", "error");
+                            jObject.put("Message", "文件不存在");
+                            return jObject;
+                        } else {
+                            if (file.delete()) {
+                                projectFileReviewRepository.delete(projectFileReview);
+                                projectFileReviewReturns.add(projectFileReview);
+                            } else {
+                                jObject.put("Result", "error");
+                                jObject.put("Message", "本地删除失败");
+                                return jObject;
+                            }
+                        }
+                    }
+                    else{
+                        projectFileReviewRepository.delete(projectFileReview);
+                        projectFileReviewReturns.add(projectFileReview);
+                    }
+                }
+                for (ProjectTask projectTask : projectTasks) {
+                    Staff staff = staffRepository.findByStaffNo(projectTask.getReceiverNo());
+                    if(staff==null){
+                        jObject.put("Result", "error");
+                        jObject.put("Message", "projectTask对应员工信息"+projectTask.getReceiverNo()+"未找到");
+                    }
+                    //除模型外的
+                    if(staff.getAccess()==3||staff.getAccess()==4){
+                        continue;
+                    }
+                    projectTaskRepository.delete(projectTask);
+                    projectTaskReturns.add(projectTask);
+                }
+                projectInfo.setModelStatus(2);
+                projectInfo.setRenderStatus(1);
+                projectInfo.setLateStatus(0);
+                projectInfo.setStatus(1);
+                break;
+            }
+            case 3:{
+                /**
+                 * 回滚到后期阶段
+                 *  projectFile
+                 *      删除后期的所有文件+数据库记录
+                 *  projectFileReview
+                 *      删除后期的所有未通过的文件+数据库记录 后期的所有通过的数据库记录
+                 *  projectTask
+                 *      删除后期的所有任务(根据receiver_no的对应权限来判断    模型34 渲染56 后期78)
+                 */
+                for (ProjectFile projectFile : projectFiles) {
+                    if(projectFile.getModule().equals("后期")){
+                        File file = new File(projectFile.getFullPath());
+                        if (!file.exists()) {
+                            jObject.put("Result", "error");
+                            jObject.put("Message", "文件不存在");
+                            return jObject;
+                        } else {
+                            if (file.delete()) {
+                                projectFileRepository.delete(projectFile);
+                                projectFileReturns.add(projectFile);
+                            } else {
+                                jObject.put("Result", "error");
+                                jObject.put("Message", "本地删除失败");
+                                return jObject;
+                            }
+                        }
+                    }
+                }
+                for (ProjectFileReview projectFileReview : projectFileReviews) {
+                    if(projectFileReview.getModule().equals("后期")){
+                        if(projectFileReview.getStatus()==2){
+                            File file = new File(projectFileReview.getFullPath());
+                            if (!file.exists()) {
+                                jObject.put("Result", "error");
+                                jObject.put("Message", "文件不存在");
+                                return jObject;
+                            } else {
+                                if (file.delete()) {
+                                    projectFileReviewRepository.delete(projectFileReview);
+                                    projectFileReviewReturns.add(projectFileReview);
+                                } else {
+                                    jObject.put("Result", "error");
+                                    jObject.put("Message", "本地删除失败");
+                                    return jObject;
+                                }
+                            }
+                        }
+                        else{
+                            projectFileReviewRepository.delete(projectFileReview);
+                            projectFileReviewReturns.add(projectFileReview);
+                        }
+                    }
+                }
+                for (ProjectTask projectTask : projectTasks) {
+                    Staff staff = staffRepository.findByStaffNo(projectTask.getReceiverNo());
+                    if(staff==null){
+                        jObject.put("Result", "error");
+                        jObject.put("Message", "projectTask对应员工信息"+projectTask.getReceiverNo()+"未找到");
+                    }
+                    //除模型外的
+                    if(staff.getAccess()==7||staff.getAccess()==8){
+                        projectTaskRepository.delete(projectTask);
+                        projectTaskReturns.add(projectTask);
+                    }
+                }
+                projectInfo.setModelStatus(2);
+                projectInfo.setRenderStatus(2);
+                projectInfo.setLateStatus(1);
+                projectInfo.setStatus(1);
+                break;
+            }
+            default:{
+                jObject.put("Result", "error");
+                jObject.put("Message", "destStage错误 值为："+destStage);
+                return jObject;
+            }
+        }
+        project_file.put("文件映射数量", "共" + projectFileReturns.size() + "个");
+        project_file.put("文件映射详情", projectFileReturns);
+        project_file_review.put("审核数量", "共" + projectFileReviewReturns.size() + "个");
+        project_file_review.put("审核详情", projectFileReviewReturns);
+        project_task.put("任务数量", "共" + projectTaskReturns.size() + "个");
+        project_task.put("任务详情", projectTaskReturns);
+        jObject.put("project_file", project_file);
+        jObject.put("project_file_review", project_file_review);
+        jObject.put("project_task", project_task);
+
+        projectInfo = projectInfoRepository.save(projectInfo);
+        jObject.put("修改后的ProjectInfo", projectInfo);
+
+        jObject.put("Result", "success");
+        return jObject;
+    }
 
     @PutMapping("/publish")
     JSONObject publish(@RequestBody ProjectInfoReturn projectInfoReturn) {
@@ -291,18 +650,9 @@ public class ProjectInfoHandler {
         //提交阶段进度
         //需验证所有任务是否完成
         JSONObject jObject = new JSONObject();
-        // projectInfoRepository.save(projectInfo);
+        projectInfoRepository.save(projectInfo);
         jObject.put("ProjectInfo", projectInfo);
         // jObject.put("staffNo", staffNo);
-        jObject.put("Result", "success");
-        return jObject;
-    }
-
-    @PutMapping("/test")
-    JSONObject test(@RequestBody JSONObject temp) {
-        JSONObject jObject = new JSONObject();
-        // projectInfoRepository.save(projectInfo);
-        jObject.put("temp",temp.get("test"));
         jObject.put("Result", "success");
         return jObject;
     }

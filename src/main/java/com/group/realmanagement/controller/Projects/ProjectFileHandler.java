@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -22,10 +23,12 @@ import com.group.realmanagement.entity.Projects.JsonTest;
 import com.group.realmanagement.entity.Projects.ProjectFile;
 import com.group.realmanagement.entity.Projects.ProjectFileReview;
 import com.group.realmanagement.entity.Projects.ProjectInfo;
+import com.group.realmanagement.entity.Projects.ProjectTask;
 import com.group.realmanagement.entity.User.Staff;
 import com.group.realmanagement.repository.Projects.ProjectFileRepository;
 import com.group.realmanagement.repository.Projects.ProjectFileReviewRepository;
 import com.group.realmanagement.repository.Projects.ProjectInfoRepository;
+import com.group.realmanagement.repository.Projects.ProjectTaskRepository;
 import com.group.realmanagement.repository.User.GuestRepository;
 import com.group.realmanagement.repository.User.StaffRepository;
 
@@ -49,6 +52,8 @@ public class ProjectFileHandler {
     private ProjectFileRepository projectFileRepository;
     @Autowired
     private ProjectFileReviewRepository projectFileReviewRepository;
+    @Autowired
+    private ProjectTaskRepository projectTaskRepository;
     @Autowired
     private StaffRepository staffRepository;
     @Autowired
@@ -120,6 +125,7 @@ public class ProjectFileHandler {
     public JSONObject fileUpload(@RequestParam("projectNo") int projectNo, @RequestParam("staffNo") int uploader,
             @RequestParam("file") MultipartFile file, @RequestParam("path") String path,
             @RequestParam("principalNo") int principalNo, @RequestParam("taskNo") int taskNo) {// 上传单个文件
+
         JSONObject jObject = new JSONObject();
         ProjectInfo projectInfo = projectInfoRepository.findByProjectNo(projectNo);
 
@@ -235,6 +241,12 @@ public class ProjectFileHandler {
             projectFile.setFileSize(getFileSize(dest));
             // projectFile = projectFileRepository.save(projectFile);
 
+            if(projectFile.getTaskNo()==0){//上传资料的情况 直接存入对应目录
+                projectFile = projectFileRepository.save(projectFile);
+                jObject.put("ProjectFile", projectFile);
+                jObject.put("Result", "success");
+                return jObject;
+            }//否则文件进行审核步骤
             // 审核信息存入
             ProjectFileReview projectFileReview = new ProjectFileReview();
             projectFileReview.setReviewByFile(projectFile, principalNo);
@@ -378,7 +390,7 @@ public class ProjectFileHandler {
                     jObject.put("Result", "success");
                     jObject.put("Message", "本地删除成功，服务器映射删除");
                 } else {
-                    jObject.put("Result", "success");
+                    jObject.put("Result", "error");
                     jObject.put("Message", "本地删除失败");
                 }
             }
@@ -391,34 +403,45 @@ public class ProjectFileHandler {
 
     @DeleteMapping("/deleteAndResetByProjectNo") // 删除项目所有文件并初始化
     JSONObject deleteAndResetByProjectNo(int projectNo) {
-        // 1.删掉服务器该项目所有映射(包括project_file和project_file_review)
+        // 1.删掉服务器该项目所有映射(包括project_file和project_file_review和project_task)
         // 2.修改project_info中的对应状态
         // 3.删掉本地文件
         JSONObject jObject = new JSONObject();
         // 1
         List<ProjectFile> projectFiles = projectFileRepository.findByProjectNo(projectNo);
         List<ProjectFileReview> projectFileReviews = projectFileReviewRepository.findByProjectNo(projectNo);
+        List<ProjectTask> projectTasks = projectTaskRepository.findByProjectNo(projectNo);
 
         JSONObject project_file = new JSONObject();
         JSONObject project_file_review = new JSONObject();
-        project_file.put("映射数量", "共" + projectFiles.size() + "个");
-        project_file.put("映射详情", projectFiles);
-        project_file_review.put("映射数量", "共" + projectFileReviews.size() + "个");
-        project_file_review.put("映射详情", projectFileReviews);
+        JSONObject project_task = new JSONObject();
+        project_file.put("文件映射数量", "共" + projectFiles.size() + "个");
+        project_file.put("文件映射详情", projectFiles);
+        project_file_review.put("审核数量", "共" + projectFileReviews.size() + "个");
+        project_file_review.put("审核详情", projectFileReviews);
+        project_task.put("任务数量", "共" + projectTasks.size() + "个");
+        project_task.put("任务详情", projectTasks);
         jObject.put("project_file", project_file);
         jObject.put("project_file_review", project_file_review);
+        jObject.put("project_task", project_task);
         for (ProjectFile projectFile : projectFiles) {
             projectFileRepository.delete(projectFile);
         }
         for (ProjectFileReview projectFileReview : projectFileReviews) {
             projectFileReviewRepository.delete(projectFileReview);
         }
+        for (ProjectTask projectTask : projectTasks) {
+            projectTaskRepository.delete(projectTask);
+        }
 
         // 2
         ProjectInfo projectInfo = projectInfoRepository.findByProjectNo(projectNo);
         projectInfo.setModelNo(0);
+        projectInfo.setModelStatus(0);
         projectInfo.setRenderNo(0);
+        projectInfo.setRenderStatus(0);
         projectInfo.setLateNo(0);
+        projectInfo.setLateStatus(0);
         projectInfo.setStatus(0);
         projectInfoRepository.save(projectInfo);
         jObject.put("修改后的project_info", projectInfo);
