@@ -84,7 +84,7 @@ public class StaffHandler {
         List<Staff> staffs = staffRepository.findAll();
         List<Staff> staffs2 = new ArrayList<>();
         for (Staff staff : staffs) {
-            if(staff.getPost().equals("模型主管")){
+            if(staff.getPost().equals("模型主管")||staff.getPost().equals("管理员")){
                 staffs2.add(staff);
             }
         }
@@ -185,7 +185,7 @@ public class StaffHandler {
         else return "{\"Message\":\"error\"}";
     }
 
-    @PutMapping("/updateByStaffNo")
+    @PutMapping("/update")
     public String update(@RequestBody Staff staff){
         // staff.setPassword();//加密后存入数据库
         int res = staffRepository.updateByStaffNo(staff.getName(),staff.getDepartment(),staff.getPost(),staff.getContact(),

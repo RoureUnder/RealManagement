@@ -136,6 +136,7 @@ public class ProjectFileHandler {
         // 2.员工编号(staff表中是否存在)
         // 3.路径(格式错误)
         // 4.文件(为空或者重复)
+        // 5.任务编号
         if (projectInfo == null) {
             jObject.put("Result", "error");
             jObject.put("Message", "未找到对应项目信息");
@@ -248,6 +249,21 @@ public class ProjectFileHandler {
                 return jObject;
             }//否则文件进行审核步骤
             // 审核信息存入
+            else{
+                Optional<ProjectTask> projectTask = projectTaskRepository.findById(taskNo);
+                if(projectTask.isEmpty()){
+                    jObject.put("Result", "error");
+                    jObject.put("Message", "未找到该任务，请联系管理员");
+                    return jObject;
+                }
+                else{
+                    if(projectTask.get().getFinished()==1){
+                        jObject.put("Result", "error");
+                        jObject.put("Message", "该任务已完成，请勿重新提交");
+                        return jObject;
+                    }
+                }
+            }
             ProjectFileReview projectFileReview = new ProjectFileReview();
             projectFileReview.setReviewByFile(projectFile, principalNo);
             projectFileReview = projectFileReviewRepository.save(projectFileReview);

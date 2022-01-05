@@ -66,7 +66,7 @@ public class GuestHandler {
         else return "{\"Message\":\"error\"}";
     }
 
-    @PutMapping("/updateByGuestNo")
+    @PutMapping("/update")
     public String update(@RequestBody Guest guest){
         int res = guestRepository.updateByGuestNo(guest.getGuestName(), guest.getPrimaryUnit(), guest.getSecondaryUnit(), guest.getTertiaryUnit(), guest.getTelephone(), guest.getMobilePhone(), guest.getQq(), guest.getEmail(), guest.getGuestNo());
         if(res==1)
@@ -75,5 +75,4 @@ public class GuestHandler {
         }
         else return "{\"Message\":\"error\"}";
     }
-    //三级级联查询未实现
 }

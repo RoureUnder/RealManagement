@@ -87,7 +87,6 @@ public class UserHandler {
         else return "{\"Message\":\"error\"}";
     }
 
-
     @DeleteMapping("/deleteByStaffNo")
     public String delete(int staffNo){
         int res = userRepository.deleteByStaffNo(staffNo);
@@ -138,7 +137,7 @@ public class UserHandler {
 
 
     // user.setPassword(encryptBASE64(password.getBytes()));//加密返回
-     // user.setPassword(new String(decryptBASE64(user.getPassword())));//解密
+    // user.setPassword(new String(decryptBASE64(user.getPassword())));//解密
 
     /**
      * BASE64Encoder 加密
